@@ -1,4 +1,4 @@
-package com.hungng3011.ecom.auth.dto;
+package com.hungng3011.ecom.auth;
 
 public class AuthResponse {
 }

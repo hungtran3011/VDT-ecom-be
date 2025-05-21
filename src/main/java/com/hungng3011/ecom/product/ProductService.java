@@ -1,34 +1,58 @@
 package com.hungng3011.ecom.product;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ProductService {
-    // This class will contain the business logic for managing products
-    // For example, it can interact with a database to perform CRUD operations
+    private final ProductRepository productRepository;
 
-    public void addProduct(Product product) {
-        // Logic to add product
+    @Autowired
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
     }
 
-    public Product getProductById(String id) {
-        // Logic to get product by ID
-        return new Product();
+    public Product addProduct(Product product) {
+        // Set up relationships for variants and images
+        if (product.getVariants() != null) {
+            for (ProductVariant variant : product.getVariants()) {
+                variant.setProduct(product);
+                if (variant.getImages() != null) {
+                    for (ProductVariantImages image : variant.getImages()) {
+                        image.setProductVariant(variant);
+                    }
+                }
+            }
+        }
+        return productRepository.save(product);
+    }
+
+    public Product getProductById(Long id) {
+        Optional<Product> product = productRepository.findById(id);
+        return product.orElse(null);
     }
 
     public List<Product> getAllProducts() {
-        // Logic to get all products
-        return new ArrayList<>();
+        return productRepository.findAll();
     }
 
-    public void updateProduct(String id, Product product) {
-        // Logic to update product
+    public Product updateProduct(Long id, Product updatedProduct) {
+        return productRepository.findById(id).map(product -> {
+            product.setName(updatedProduct.getName());
+            product.setDescription(updatedProduct.getDescription());
+            product.setVariants(updatedProduct.getVariants());
+            return productRepository.save(product);
+        }).orElse(null);
     }
 
-    public void deleteProduct(String id) {
-        // Logic to delete product
+    public boolean deleteProduct(Long id) {
+        if (productRepository.existsById(id)) {
+            productRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }
